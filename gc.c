@@ -93,11 +93,13 @@ static int gc_thread_func(void *data)
 			stat_io_skip_bggc_count(sbi);
 			goto next;
 		}
+		
+		m_set_sleep_time(gc_th, &wait_ms, sbi);
 
-		if (has_enough_invalid_blocks(sbi))
+		/*if (has_enough_invalid_blocks(sbi))
 			decrease_sleep_time(gc_th, &wait_ms);
 		else
-			increase_sleep_time(gc_th, &wait_ms);
+			increase_sleep_time(gc_th, &wait_ms);*/
 do_gc:
 		stat_inc_bggc_count(sbi);
 

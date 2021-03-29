@@ -19,6 +19,8 @@
 
 #define DEF_GC_FAILED_PINNED_FILES	2048
 
+#define M_DEF_MI 10000
+
 /* Search max. number of dirty segments to select a victim segment */
 #define DEF_MAX_VICTIM_SEARCH 4096 /* covers 8GB */
 
@@ -92,6 +94,25 @@ static inline void decrease_sleep_time(struct f2fs_gc_kthread *gc_th,
 		*wait = min_time;
 	else
 		*wait -= min_time;
+}
+
+static inline void m_set_sleep_time(struct f2fs_gc_kthread *gc_th,
+							unsigned int *wait,
+							struct f2fs_sb_info *sbi)
+{
+	unsigned int min_time = gc_th->min_sleep_time;
+	unsigned int max_time = gc_th->max_sleep_time;
+				
+	if (*wait == gc_th->no_gc_sleep_time)
+		*wait = gc_th->max_sleep_time;
+	else
+		*wait = M_DEF_MI * free_user_blocks(sbi) / limit_free_user_blocks(sbi);
+	
+	if ((long long)*wait  < (long long)min_time)
+		*wait = min_time;
+	
+	if ((long long)*wait  > (long long)max_time)
+		*wait = max_time;
 }
 
 static inline bool has_enough_invalid_blocks(struct f2fs_sb_info *sbi)

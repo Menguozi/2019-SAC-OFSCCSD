@@ -624,6 +624,14 @@ static inline int utilization(struct f2fs_sb_info *sbi)
 #define DEF_MIN_FSYNC_BLOCKS	8
 #define DEF_MIN_HOT_BLOCKS	16
 
+#define M_DEF_LOW_FSYNC_BLOCKS	4
+#define M_DEF_MID_FSYNC_BLOCKS	8
+#define M_DEF_HIGH_FSYNC_BLOCKS	16
+
+#define M_DEF_LOW_FRAGMENTATION_DEGREE 10
+#define M_DEF_MID_FRAGMENTATION_DEGREE 20
+#define M_DEF_HIGH_FRAGMENTATION_DEGREE 40
+
 #define SMALL_VOLUME_SEGMENTS	(16 * 512)	/* 16GB */
 
 enum {

@@ -203,6 +203,43 @@ static void try_to_fix_pino(struct inode *inode)
 	up_write(&fi->i_sem);
 }
 
+static inline int m_calculate_fragmentation_degree(struct f2fs_sb_info *sbi)
+{
+	block_t invalid_blocks = sbi->user_block_count - sbi->total_valid_block_count - free_user_blocks(sbi);
+
+	block_t ith_low = sbi->user_block_count * M_DEF_LOW_FRAGMENTATION_DEGREE / 100;
+	block_t ith_mid = sbi->user_block_count * M_DEF_MID_FRAGMENTATION_DEGREE / 100;
+	block_t ith_high = sbi->user_block_count * M_DEF_HIGH_FRAGMENTATION_DEGREE / 100;
+
+	if(invalid_blocks <= ith_low)
+		return M_DEF_LOW_FRAGMENTATION_DEGREE;
+	if(invalid_blocks <= ith_mid)
+		return M_DEF_MID_FRAGMENTATION_DEGREE;
+	else
+		return M_DEF_HIGH_FRAGMENTATION_DEGREE;
+}
+
+static inline void m_set_in_place_update_threshold(struct f2fs_sb_info *sbi)
+{
+	struct f2fs_sm_info *smi = SM_I(sbi);
+
+	switch (m_calculate_fragmentation_degree(sbi))
+		{
+			case M_DEF_LOW_FRAGMENTATION_DEGREE:{
+				smi->min_fsync_blocks = M_DEF_LOW_FSYNC_BLOCKS;
+				return;
+			}
+			case M_DEF_MID_FRAGMENTATION_DEGREE:{
+				smi->min_fsync_blocks = M_DEF_MID_FSYNC_BLOCKS;
+				return;
+			}
+			case M_DEF_HIGH_FRAGMENTATION_DEGREE:{
+				smi->min_fsync_blocks = M_DEF_HIGH_FSYNC_BLOCKS;
+				return;
+			}
+		}
+}
+
 static int f2fs_do_sync_file(struct file *file, loff_t start, loff_t end,
 						int datasync, bool atomic)
 {
@@ -217,6 +254,8 @@ static int f2fs_do_sync_file(struct file *file, loff_t start, loff_t end,
 		.for_reclaim = 0,
 	};
 	unsigned int seq_id = 0;
+
+	m_set_in_place_update_threshold(sbi);
 
 	if (unlikely(f2fs_readonly(inode->i_sb) ||
 				is_sbi_flag_set(sbi, SBI_CP_DISABLED)))
